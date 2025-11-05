@@ -1,0 +1,26 @@
+/* src/components/AddIncomeSourceForm.module.css */
+.formGrid {
+  display: grid;
+  gap: 1rem; /* gap-4 */
+  padding-top: 1rem; /* py-4 */
+  padding-bottom: 1rem; /* py-4 */
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* grid-cols-4 */
+  align-items: center;
+  gap: 1rem; /* gap-4 */
+}
+
+.labelRight {
+  text-align: right;
+}
+
+.colSpan3 {
+  grid-column: span 3 / span 3; /* col-span-3 */
+}
+
+.buttonFullWidth {
+  width: 100%; /* w-full */
+}

@@ -1,0 +1,116 @@
+/* src/pages/GoalsPage.module.css */
+.pageContainer {
+  padding: 1rem; /* p-4 */
+  background-color: #f7fafc; /* bg-gray-100 */
+  min-height: 100vh;
+}
+
+@media (min-width: 640px) { /* sm */
+  .pageContainer {
+    padding: 1.5rem; /* sm:p-6 */
+  }
+}
+
+@media (min-width: 768px) { /* md */
+  .pageContainer {
+    padding: 2rem; /* md:p-8 */
+  }
+}
+
+.maxWContainer {
+  max-width: 50rem; /* max-w-4xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.headerTitle {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: bold;
+  color: #1a202c; /* text-gray-900 */
+}
+
+@media (min-width: 640px) { /* sm */
+  .headerTitle {
+    font-size: 1.875rem; /* sm:text-3xl */
+  }
+}
+
+.noGoalsContainer {
+  text-align: center;
+  padding-top: 3rem; /* py-12 */
+  padding-bottom: 3rem;
+  padding-left: 1rem; /* px-4 */
+  padding-right: 1rem;
+  border: 2px dashed #cbd5e0; /* border-2 border-dashed border-gray-300 */
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+.noGoalsText {
+  color: #a0aec0; /* text-gray-500 */
+}
+
+.goalsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* space-y-4 */
+}
+
+.goalItem {
+  background-color: #ffffff; /* bg-white */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  border-radius: 0.5rem; /* rounded-lg */
+  padding: 1rem; /* p-4 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goalName {
+  font-weight: 600; /* font-semibold */
+  font-size: 1.125rem; /* text-lg */
+  color: #1a202c; /* text-gray-900 */
+}
+
+.goalProgress {
+  font-size: 0.875rem; /* text-sm */
+  color: #4a5568; /* text-gray-600 */
+}
+
+.goalAllocation {
+  font-size: 0.875rem; /* text-sm */
+  color: #4a5568; /* text-gray-600 */
+}
+
+.loadingErrorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.loadingText {
+  color: #4a5568; /* text-gray-600 */
+}
+
+.errorText {
+  color: #e53e3e; /* text-red-500 */
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem; /* space-x-2 */
+  align-items: center;
+}
+
+.itemActions {
+  display: flex;
+  gap: 0.5rem; /* space-x-2 */
+  align-items: center;
+}

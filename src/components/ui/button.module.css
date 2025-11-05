@@ -1,0 +1,113 @@
+/* src/components/ui/button.module.css */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 0.375rem; /* rounded-md */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  /* ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 */
+  /* These focus/disabled styles are more complex and might need to be handled globally or with a utility class if not directly supported by CSS Modules */
+  /* For now, I'll omit them or simplify */
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring), 0 0 0 2px var(--ring-offset-background); /* focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 */
+}
+
+.button:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Variants */
+.default {
+  background-color: #1a202c; /* bg-primary */
+  color: #ffffff; /* text-primary-foreground */
+}
+
+.default:hover {
+  background-color: #2d3748; /* hover:bg-primary/90 */
+}
+
+.destructive {
+  background-color: #e53e3e; /* bg-destructive */
+  color: #ffffff; /* text-destructive-foreground */
+}
+
+.destructive:hover {
+  background-color: #c53030; /* hover:bg-destructive/90 */
+}
+
+.outline {
+  border: 1px solid #e2e8f0; /* border border-input */
+  background-color: #ffffff; /* bg-background */
+  color: #1a202c; /* text-foreground */
+}
+
+.outline:hover {
+  background-color: #f7fafc; /* hover:bg-accent */
+  color: #1a202c; /* hover:text-accent-foreground */
+}
+
+.secondary {
+  background-color: #edf2f7; /* bg-secondary */
+  color: #1a202c; /* text-secondary-foreground */
+}
+
+.secondary:hover {
+  background-color: #e2e8f0; /* hover:bg-secondary/90 */
+}
+
+.ghost {
+  background-color: transparent;
+  color: #1a202c; /* text-foreground */
+}
+
+.ghost:hover {
+  background-color: #f7fafc; /* hover:bg-accent */
+  color: #1a202c; /* hover:text-accent-foreground */
+}
+
+.link {
+  background-color: transparent;
+  color: #1a202c; /* text-primary */
+  text-decoration: underline;
+  text-underline-offset: 4px; /* underline-offset-4 */
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Sizes */
+.sizeDefault {
+  height: 2.5rem; /* h-10 */
+  padding-left: 1rem; /* px-4 */
+  padding-right: 1rem; /* px-4 */
+  padding-top: 0.5rem; /* py-2 */
+  padding-bottom: 0.5rem; /* py-2 */
+}
+
+.sizeSm {
+  height: 2.25rem; /* h-9 */
+  border-radius: 0.375rem; /* rounded-md */
+  padding-left: 0.75rem; /* px-3 */
+  padding-right: 0.75rem; /* px-3 */
+}
+
+.sizeLg {
+  height: 2.75rem; /* h-11 */
+  border-radius: 0.375rem; /* rounded-md */
+  padding-left: 2rem; /* px-8 */
+  padding-right: 2rem; /* px-8 */
+}
+
+.sizeIcon {
+  height: 2.5rem; /* h-10 */
+  width: 2.5rem; /* w-10 */
+}

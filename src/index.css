@@ -1,0 +1,8 @@
+
+/* Basic reset or global styles can go here */
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: #f7fafc; /* light mode background */
+  color: #1a202c; /* light mode text */
+}

@@ -1,0 +1,28 @@
+/* src/components/ui/input.module.css */
+.input {
+  display: flex;
+  height: 2.5rem; /* h-10 */
+  width: 100%;
+  border-radius: 0.375rem; /* rounded-md */
+  border: 1px solid #e2e8f0; /* border border-input */
+  background-color: #ffffff; /* bg-background */
+  padding: 0.5rem 0.75rem; /* px-3 py-2 */
+  font-size: 0.875rem; /* text-sm */
+  /* ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 */
+  /* Simplified focus/disabled/placeholder styles for now */
+  color: #1a202c; /* text-foreground */
+}
+
+.input::placeholder {
+  color: #6b7280; /* placeholder:text-muted-foreground */
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring), 0 0 0 2px var(--ring-offset-background); /* focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 */
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
