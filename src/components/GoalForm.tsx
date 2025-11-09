@@ -1,37 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { supabase } from '../lib/supabaseClient';
-// Define a local Session type to avoid import issues
-interface Session {
-  user: {
-    id: string;
-    email?: string;
-    // Add other user properties if needed
-  };
-  // Add other session properties if needed
-}
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
+import styles from './GoalForm.module.css';
+
+interface Session {
+  user: {
+    id: string;
+    email?: string;
+  };
+}
 
 interface GoalFormProps {
   session: Session;
   onSave: () => void;
   onCancel: () => void;
-  goal?: any; // Optional goal object for editing
+  goal?: any;
+  isOverAllocated: boolean; // Thêm prop này
 }
 
-const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal }) => {
-  const [name, setName] = useState(goal?.name || '');
-  const [targetAmount, setTargetAmount] = useState(goal?.target_amount || '');
-  const [targetDate, setTargetDate] = useState(goal?.target_date || '');
-  const [allocationType, setAllocationType] = useState(goal?.allocation_type || '');
-  const [allocationValue, setAllocationValue] = useState(goal?.allocation_value || '');
-  const [allocationCycle, setAllocationCycle] = useState(goal?.allocation_cycle || '');
-  const [sourceIncomeId, setSourceIncomeId] = useState(goal?.source_income_id || '');
+const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal, isOverAllocated }) => {
+  const { register, handleSubmit, control, watch, formState: { errors }, setValue } = useForm({
+    defaultValues: {
+      name: goal?.name || '',
+      target_amount: goal?.target_amount || '',
+      target_date: goal?.target_date || '',
+      allocation_type: goal?.allocation_type || '',
+      allocation_value: goal?.allocation_value || '',
+      allocation_cycle: goal?.allocation_cycle || '',
+      source_income_id: goal?.source_income_id || '',
+    },
+  });
+
   const [incomeSources, setIncomeSources] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const allocationType = watch('allocation_type');
 
   useEffect(() => {
     const fetchIncomeSources = async () => {
@@ -43,6 +49,10 @@ const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal }) 
       if (error) {
         toast.error('Error fetching income sources: ' + error.message);
       } else {
+        // Set default source_income_id if editing and it exists in fetched data
+        if (goal?.source_income_id && data.some((source: any) => source.id === goal.source_income_id)) {
+          setValue('source_income_id', goal.source_income_id);
+        }
         setIncomeSources(data || []);
       }
     };
@@ -50,40 +60,33 @@ const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal }) 
     if (session?.user?.id) {
       fetchIncomeSources();
     }
-  }, [session]);
+  }, [session, goal?.source_income_id, setValue]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
+  const onSubmit = async (data: any) => {
     const newGoal = {
       user_id: session.user.id,
-      name,
-      target_amount: parseFloat(targetAmount),
-      target_date: targetDate || null, // Allow null for target_date
-      allocation_type: allocationType, // Corrected to use state variable name
-      allocation_value: parseFloat(allocationValue),
-      allocation_cycle: allocationCycle || null, // Allow null for allocation_cycle
-      source_income_id: sourceIncomeId || null, // Allow null for source_income_id
+      name: data.name,
+      target_amount: parseFloat(data.target_amount),
+      target_date: data.target_date || null,
+      allocation_type: data.allocation_type,
+      allocation_value: parseFloat(data.allocation_value),
+      allocation_cycle: data.allocation_cycle || null,
+      source_income_id: data.source_income_id || null,
     };
 
     let error = null;
     if (goal) {
-      // Edit existing goal
       const { error: updateError } = await supabase
         .from('goals')
         .update(newGoal)
         .eq('id', goal.id);
       error = updateError;
     } else {
-      // Add new goal
       const { error: insertError } = await supabase
         .from('goals')
         .insert(newGoal);
       error = insertError;
     }
-
-    setLoading(false);
 
     if (error) {
       toast.error('Error saving goal: ' + error.message);
@@ -94,104 +97,117 @@ const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal }) 
   };
 
   const showSourceIncomeDropdown = allocationType === 'PERCENT_SOURCE' || allocationType === 'FIXED_SOURCE';
-  const showAllocationCycleDropdown = allocationType.startsWith('FIXED');
+  const showAllocationCycleDropdown = allocationType && allocationType.startsWith('FIXED');
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold">{goal ? 'Edit Goal' : 'Add New Goal'}</h2>
+    <form onSubmit={handleSubmit(onSubmit)} className={styles.formContainer}>
+      <h2 className={styles.formTitle}>{goal ? 'Edit Goal' : 'Add New Goal'}</h2>
+      {isOverAllocated && (
+        <div className={styles.warningMessage}>
+          Cảnh báo: Tổng số tiền phân bổ cho các mục tiêu của bạn vượt quá tổng thu nhập dự kiến. Vui lòng điều chỉnh kế hoạch của bạn.
+        </div>
+      )}
 
-      <div>
+      <div className={styles.formField}>
         <Label htmlFor="name">Goal Name</Label>
-        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input id="name" {...register('name', { required: true })} />
+        {errors.name && <span>This field is required</span>}
       </div>
 
-      <div>
+      <div className={styles.formField}>
         <Label htmlFor="targetAmount">Target Amount</Label>
-        <Input
-          id="targetAmount"
-          type="number"
-          value={targetAmount}
-          onChange={(e) => setTargetAmount(e.target.value)}
-          required
-        />
+        <Input id="targetAmount" type="number" {...register('target_amount', { required: true })} />
+        {errors.target_amount && <span>This field is required</span>}
       </div>
 
-      <div>
+      <div className={styles.formField}>
         <Label htmlFor="targetDate">Target Date (Optional)</Label>
-        <Input
-          id="targetDate"
-          type="date"
-          value={targetDate}
-          onChange={(e) => setTargetDate(e.target.value)}
-        />
+        <Input id="targetDate" type="date" {...register('target_date')} />
       </div>
 
-      <div>
-        <Label htmlFor="allocationType">Allocation Type</Label>
-        <Select value={allocationType} onValueChange={setAllocationType} required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select allocation type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="PERCENT_TOTAL">% of Total Income</SelectItem>
-            <SelectItem value="PERCENT_SOURCE">% of Specific Source</SelectItem>
-            <SelectItem value="FIXED_TOTAL">Fixed Amount from Total</SelectItem>
-            <SelectItem value="FIXED_SOURCE">Fixed Amount from Specific Source</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className={styles.formField}>
+        <Label id="allocation-type-label" htmlFor="allocationType">Allocation Type</Label>
+        <Controller
+          name="allocation_type"
+          control={control}
+          rules={{ required: true }}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger aria-labelledby="allocation-type-label">
+                <SelectValue placeholder="Select allocation type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PERCENT_TOTAL">% of Total Income</SelectItem>
+                <SelectItem value="PERCENT_SOURCE">% of Specific Source</SelectItem>
+                <SelectItem value="FIXED_TOTAL">Fixed Amount from Total</SelectItem>
+                <SelectItem value="FIXED_SOURCE">Fixed Amount from Specific Source</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.allocation_type && <span>This field is required</span>}
       </div>
 
       {showSourceIncomeDropdown && (
-        <div>
-          <Label htmlFor="sourceIncome">Income Source</Label>
-          <Select value={sourceIncomeId} onValueChange={setSourceIncomeId} required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select income source" />
-            </SelectTrigger>
-            <SelectContent>
-              {incomeSources.map((source) => (
-                <SelectItem key={source.id} value={source.id}>
-                  {source.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className={styles.formField}>
+          <Label id="source-income-label" htmlFor="sourceIncome">Income Source</Label>
+          <Controller
+            name="source_income_id"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger aria-labelledby="source-income-label">
+                  <SelectValue placeholder="Select income source" />
+                </SelectTrigger>
+                <SelectContent>
+                  {incomeSources.map((source) => (
+                    <SelectItem key={source.id} value={source.id}>
+                      {source.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.source_income_id && <span>This field is required</span>}
         </div>
       )}
 
-      <div>
+      <div className={styles.formField}>
         <Label htmlFor="allocationValue">Allocation Value</Label>
-        <Input
-          id="allocationValue"
-          type="number"
-          value={allocationValue}
-          onChange={(e) => setAllocationValue(e.target.value)}
-          required
-        />
+        <Input id="allocationValue" type="number" {...register('allocation_value', { required: true })} />
+        {errors.allocation_value && <span>This field is required</span>}
       </div>
 
       {showAllocationCycleDropdown && (
-        <div>
-          <Label htmlFor="allocationCycle">Allocation Cycle</Label>
-          <Select value={allocationCycle} onValueChange={setAllocationCycle} required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select cycle" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className={styles.formField}>
+          <Label id="allocation-cycle-label" htmlFor="allocationCycle">Allocation Cycle</Label>
+          <Controller
+            name="allocation_cycle"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger aria-labelledby="allocation-cycle-label">
+                  <SelectValue placeholder="Select cycle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.allocation_cycle && <span>This field is required</span>}
         </div>
       )}
 
-      <div className="flex justify-end space-x-2">
+      <div className={styles.actions}>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : (goal ? 'Save Changes' : 'Add Goal')}
-        </Button>
+        <Button type="submit">{goal ? 'Save Changes' : 'Add Goal'}</Button>
       </div>
     </form>
   );

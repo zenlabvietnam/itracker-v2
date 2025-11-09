@@ -59,6 +59,12 @@ export default function EditIncomeSourceForm({ session, incomeSource, onSuccess 
       .eq('id', incomeSource.id)
       .eq('user_id', session.user.id);
 
+    console.log('Updating income source with:');
+    console.log('  ID:', incomeSource.id);
+    console.log('  User ID from session:', session.user.id);
+    console.log('  User ID from incomeSource prop:', incomeSource.user_id);
+    console.log('  Data:', { name, amount: parseFloat(amount), cycle });
+
     if (error) {
       toast.error("Error updating income source", {
         description: error.message,

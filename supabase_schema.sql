@@ -43,6 +43,7 @@ CREATE TABLE public.goals (
   target_amount numeric NOT NULL,
   current_amount numeric NOT NULL DEFAULT 0, -- This will be calculated by the system
   target_date date NULL,
+  forecasted_completion_date date NULL,
   
   -- Columns for flexible allocation
   allocation_type goal_allocation_type NOT NULL,
