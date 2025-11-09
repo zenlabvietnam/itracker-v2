@@ -1,0 +1,102 @@
+/* DashboardPage.module.css */
+
+.container {
+  min-height: 100vh; /* min-h-screen */
+  background-color: #f7fafc; /* bg-gray-100 - light theme background */
+  color: #1a202c; /* text-gray-900 - dark text for light theme */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2rem; /* py-8 */
+  padding-bottom: 2rem; /* py-8 */
+  max-width: 1280px; /* max-w-screen-xl or similar for centering */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem; /* px-4 */
+  padding-right: 1rem; /* px-4 */
+}
+
+.mainCard {
+  padding: 2rem; /* p-8 */
+  border-radius: 0.5rem; /* rounded-lg */
+  background-color: #ffffff; /* bg-white - light theme card */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md - consistent with other cards */
+  width: 100%; /* w-full */
+  max-width: 48rem; /* max-w-2xl */
+  text-align: center;
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 1.5rem; /* mb-6 */
+  color: #1a202c; /* text-gray-900 */
+}
+
+.emailSection {
+  margin-bottom: 1rem; /* mb-4 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* space-x-2 */
+}
+
+.emailText strong {
+  font-family: monospace; /* font-mono */
+  color: #1a202c; /* text-gray-900 */
+}
+
+.contentCard {
+  background-color: #ffffff; /* bg-white - consistent with other cards */
+  padding: 1.5rem; /* p-6 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md - consistent with other cards */
+  border: 1px solid #e2e8f0; /* border-gray-200 - subtle border */
+  margin-top: 2rem; /* mt-8 */
+  width: 100%; /* w-full */
+}
+
+.loadingMessage {
+  color: #4a5568; /* text-gray-600 */
+}
+
+.errorMessage {
+  color: #e53e3e; /* text-red-500 */
+}
+
+.small-red-button {
+  /* Matching destructive button style from other pages */
+  background-color: #e53e3e; /* red-600 */
+  color: #ffffff; /* text-white */
+  padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  font-size: 0.875rem; /* text-sm */
+  border-radius: 0.375rem; /* rounded-md */
+  transition: background-color 0.3s ease;
+}
+
+.small-red-button:hover {
+  background-color: #c53030; /* red-700 */
+}
+
+.customDateInputContainer {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.customDateLabel {
+  font-size: 0.875rem; /* text-sm */
+  color: #4a5568; /* text-gray-600 */
+}
+
+.customDateInput {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e0; /* border-gray-300 */
+  border-radius: 0.375rem; /* rounded-md */
+  font-size: 0.875rem; /* text-sm */
+  color: #1a202c; /* text-gray-900 */
+  background-color: #ffffff; /* bg-white */
+}

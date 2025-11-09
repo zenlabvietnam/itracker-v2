@@ -1,9 +1,10 @@
-import { beforeAll } from 'vitest';
+import { beforeAll, vi } from 'vitest';
 import '@testing-library/jest-dom';
 
 beforeAll(() => {
-  // @ts-expect-error - JSDOM doesn't have this, but Radix UI uses it
-  global.HTMLElement.prototype.hasPointerCapture = vi.fn();
-  global.HTMLElement.prototype.releasePointerCapture = vi.fn();
-  global.HTMLElement.prototype.scrollIntoView = vi.fn();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const g = globalThis as typeof globalThis & { HTMLElement: any };
+  g.HTMLElement.prototype.hasPointerCapture = vi.fn();
+  g.HTMLElement.prototype.releasePointerCapture = vi.fn();
+  g.HTMLElement.prototype.scrollIntoView = vi.fn();
 });

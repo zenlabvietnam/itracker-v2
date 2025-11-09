@@ -1,4 +1,32 @@
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest'; // Import vi from vitest
+
+// Mock the GoalForm component
+vi.mock('../components/GoalForm', () => ({
+  default: vi.fn((props) => {
+    // eslint-disable-next-line react/prop-types
+    return (
+      <div data-testid="mock-goal-form">
+        Mock Goal Form
+        <button onClick={props.onSave}>Mock Save</button>
+        <button onClick={props.onCancel}>Mock Cancel</button>
+      </div>
+    );
+  }),
+}));
+
+// Mock react-hook-form
+vi.mock('react-hook-form', () => ({
+  useForm: vi.fn(() => ({
+    register: vi.fn(),
+    handleSubmit: vi.fn((cb) => cb),
+    control: {},
+    watch: vi.fn(),
+    formState: { errors: {} },
+    setValue: vi.fn(),
+  })),
+  Controller: vi.fn(({ render }) => render({ field: { onChange: vi.fn(), value: '' } })),
+}));
 
 describe('GoalsPage', () => {
   const mockSession = {
@@ -12,6 +40,12 @@ describe('GoalsPage', () => {
     vi.resetModules(); // Reset modules before each test
   });
 
+  // Helper to mock supabase query chain
+  const mockSupabaseQuery = (mockData: any, mockError: any = null) => ({
+    select: vi.fn().mockReturnThis(), // Allows chaining .select()
+    eq: vi.fn().mockResolvedValueOnce({ data: mockData, error: mockError }), // Mocks the .eq() call
+  });
+
   it('renders loading state initially', async () => {
     const GoalsPage = (await import('./GoalsPage')).default;
     render(<GoalsPage session={mockSession} />);
@@ -19,35 +53,40 @@ describe('GoalsPage', () => {
   });
 
   it('renders goals correctly after fetching', async () => {
-    const mockSelect = vi.fn().mockResolvedValueOnce({
-      data: [
-        {
-          id: '1',
-          name: 'Dream Vacation',
-          target_amount: 50000000,
-          current_amount: 25000000,
-          allocation_type: 'percentage_total_income',
-          allocation_value: 10,
-          allocation_cycle: 'monthly',
-          source_income_id: null,
-        },
-        {
-          id: '2',
-          name: 'New Car',
-          target_amount: 300000000,
-          current_amount: 50000000,
-          allocation_type: 'fixed_amount_specific_income',
-          allocation_value: 5000000,
-          allocation_cycle: 'monthly',
-          source_income_id: 'some-income-id',
-        },
-      ],
-      error: null,
-    });
+    const mockGoalsData = [
+      {
+        id: '1',
+        name: 'Dream Vacation',
+        target_amount: 50000000,
+        current_amount: 25000000,
+        allocation_type: 'percentage_total_income',
+        allocation_value: 10,
+        allocation_cycle: 'monthly',
+        source_income_id: null,
+      },
+      {
+        id: '2',
+        name: 'New Car',
+        target_amount: 300000000,
+        current_amount: 50000000,
+        allocation_type: 'fixed_amount_specific_income',
+        allocation_value: 5000000,
+        allocation_cycle: 'monthly',
+        source_income_id: 'some-income-id',
+      },
+    ];
 
     vi.doMock('@/lib/supabaseClient', () => ({
       supabase: {
-        from: () => ({ select: mockSelect }),
+        from: vi.fn((tableName) => {
+          if (tableName === 'goals') {
+            return mockSupabaseQuery(mockGoalsData);
+          }
+          if (tableName === 'income_sources') {
+            return mockSupabaseQuery([]); // Mock empty income sources for this test
+          }
+          return mockSupabaseQuery([]);
+        }),
       },
     }));
 
@@ -63,11 +102,17 @@ describe('GoalsPage', () => {
   });
 
   it('renders message when no goals are set', async () => {
-    const mockSelect = vi.fn().mockResolvedValueOnce({ data: [], error: null });
-
     vi.doMock('@/lib/supabaseClient', () => ({
       supabase: {
-        from: () => ({ select: mockSelect }),
+        from: vi.fn((tableName) => {
+          if (tableName === 'goals') {
+            return mockSupabaseQuery([]);
+          }
+          if (tableName === 'income_sources') {
+            return mockSupabaseQuery([]);
+          }
+          return mockSupabaseQuery([]);
+        }),
       },
     }));
 
@@ -78,11 +123,17 @@ describe('GoalsPage', () => {
   });
 
   it('renders error message if fetching fails', async () => {
-    const mockSelect = vi.fn().mockResolvedValueOnce({ data: null, error: { message: 'Failed to fetch' } });
-
     vi.doMock('@/lib/supabaseClient', () => ({
       supabase: {
-        from: () => ({ select: mockSelect }),
+        from: vi.fn((tableName) => {
+          if (tableName === 'goals') {
+            return mockSupabaseQuery(null, { message: 'Failed to fetch' });
+          }
+          if (tableName === 'income_sources') {
+            return mockSupabaseQuery([]);
+          }
+          return mockSupabaseQuery([]);
+        }),
       },
     }));
 

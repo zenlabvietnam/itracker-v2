@@ -1,22 +1,13 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
-// Define a local Session type to avoid import issues
-interface Session {
-  user: {
-    id: string;
-    email?: string;
-    // Add other user properties if needed
-  };
-  // Add other session properties if needed
-}
+import type { Session } from '@supabase/supabase-js'; // Import Session type from Supabase
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import IncomeSourcesPage from './pages/IncomeSourcesPage';
 import GoalsPage from './pages/GoalsPage'; // Import GoalsPage
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
-import { Button } from './components/ui/button'; // Import the new Button component
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -50,10 +41,6 @@ function App() {
           element={
             <ProtectedRoute session={session}>
               <DashboardPage session={session!} />
-              <Button>Test Button</Button> {/* Render the new Button component */}
-              <Link to="/goals">
-                <Button>Goals</Button>
-              </Link>
             </ProtectedRoute>
           }
         />

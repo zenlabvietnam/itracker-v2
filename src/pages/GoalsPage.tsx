@@ -1,29 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import GoalForm from '../components/GoalForm';
 import { toast } from 'sonner';
 import styles from './GoalsPage.module.css';
+import type { IncomeSource, Goal } from '../types'; // Import IncomeSource and Goal from types
 
 interface Session {
   user: {
     id: string;
     email?: string;
   };
-}
-
-interface Goal {
-  id: string;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  allocation_type: string;
-  allocation_value: number;
-  allocation_cycle: string;
-  source_income_id: string | null;
-  income_sources?: { name: string } | null; // Thêm trường này
-  forecasted_completion_date?: string | null;
 }
 
 interface GoalsPageProps {
@@ -39,13 +27,10 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
-  const [totalIncome, setTotalIncome] = useState<number>(0);
-  const [incomeSources, setIncomeSources] = useState<any[]>([]); // Thêm state này
-    const [totalAllocatedAmount, setTotalAllocatedAmount] = useState<number>(0);
-    const [isOverAllocated, setIsOverAllocated] = useState<boolean>(false); // Thêm state này
+  const [isOverAllocated, setIsOverAllocated] = useState<boolean>(false); // Thêm state này
   
     // Hàm trợ giúp để tính toán số tiền phân bổ hàng tháng
-    const calculateMonthlyAllocation = (goal: Goal, allIncomeSources: any[], currentTotalIncome: number) => {
+    const calculateMonthlyAllocation = useCallback((goal: Goal, allIncomeSources: IncomeSource[], currentTotalIncome: number) => {
       let monthlyAllocation = 0;
       const sourceIncome = allIncomeSources.find(source => source.id === goal.source_income_id);
   
@@ -58,8 +43,6 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
                       let sourceMonthlyAmount = sourceIncome.amount;
                       if (sourceIncome.cycle === 'weekly') {
                         sourceMonthlyAmount *= (52 / 12);
-                      } else if (sourceIncome.cycle === 'bi-weekly') {
-                        sourceMonthlyAmount *= (26 / 12);
                       }
                       monthlyAllocation = (sourceMonthlyAmount * goal.allocation_value) / 100;          }
           break;
@@ -67,9 +50,7 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
           monthlyAllocation = goal.allocation_value;
           if (goal.allocation_cycle === 'weekly') {
             monthlyAllocation *= (52 / 12);
-          } else if (goal.allocation_cycle === 'bi-weekly') {
-            monthlyAllocation *= (26 / 12);
-          } else if (goal.allocation_cycle === 'annually') {
+          } else if (goal.allocation_cycle === 'yearly') { // Changed from 'annually' to 'yearly' to match IncomeSource cycle
             monthlyAllocation /= 12;
           }
           break;
@@ -78,9 +59,7 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
             monthlyAllocation = goal.allocation_value;
             if (goal.allocation_cycle === 'weekly') {
               monthlyAllocation *= (52 / 12);
-            } else if (goal.allocation_cycle === 'bi-weekly') {
-              monthlyAllocation *= (26 / 12);
-            } else if (goal.allocation_cycle === 'annually') {
+            } else if (goal.allocation_cycle === 'yearly') { // Changed from 'annually' to 'yearly' to match IncomeSource cycle
               monthlyAllocation /= 12;
             }
           }
@@ -89,9 +68,9 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
           monthlyAllocation = 0;
       }
       return monthlyAllocation;
-    };
+    }, []);
   
-    const fetchTotalIncome = async () => {
+    const fetchTotalIncome = useCallback(async () => {
           const { data, error } = await supabase
             .from('income_sources')
             .select('id, name, amount, cycle') // Lấy cột 'cycle' thay vì 'frequency'
@@ -104,23 +83,18 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
       
           let calculatedTotalIncome = 0;
           if (data) {
-            setIncomeSources(data);
             calculatedTotalIncome = data.reduce((sum, source) => {
               let monthlyAmount = source.amount;
               if (source.cycle === 'weekly') {
                 monthlyAmount *= (52 / 12); // Convert weekly to monthly
-              } else if (source.cycle === 'bi-weekly') {
-                monthlyAmount *= (26 / 12); // Convert bi-weekly to monthly
-              } else if (source.cycle === 'annually') {
-                monthlyAmount /= 12; // Convert annually to monthly
               }
+              // No 'bi-weekly' conversion needed as it's not in IncomeSource cycle type
               return sum + monthlyAmount;
             }, 0);
           }
-          setTotalIncome(calculatedTotalIncome);
           return { total: calculatedTotalIncome, sources: data || [] };
-        };  
-    const fetchGoals = async (currentTotalIncome: number, allIncomeSources: any[]) => {
+        }, [session.user.id]);  
+    const fetchGoals = useCallback(async (currentTotalIncome: number, allIncomeSources: IncomeSource[]) => {
       setLoading(true);
       const { data, error } = await supabase
         .from('goals')
@@ -129,35 +103,31 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
   
       if (error) {
         setError(error.message);
-      } else if (data) {
+      }
+      else if (data) {
         setGoals(data);
         const totalAllocated = data.reduce((sum, goal) => {
           return sum + calculateMonthlyAllocation(goal, allIncomeSources, currentTotalIncome);
         }, 0);
-        setTotalAllocatedAmount(totalAllocated);
         setIsOverAllocated(totalAllocated > currentTotalIncome); // Cập nhật isOverAllocated
       }
       setLoading(false);
-    };
+    }, [session.user.id, calculateMonthlyAllocation]);
 
   useEffect(() => {
     if (session?.user?.id) {
       const initializeData = async () => {
         const { total, sources } = await fetchTotalIncome();
-        setTotalIncome(total);
-        setIncomeSources(sources);
         fetchGoals(total, sources);
       };
       initializeData();
     }
-  }, [session]);
+  }, [session, fetchTotalIncome, fetchGoals]);
 
   const handleGoalSave = async () => {
     setIsAddFormOpen(false);
     setIsEditFormOpen(false);
     const { total, sources } = await fetchTotalIncome();
-    setTotalIncome(total);
-    setIncomeSources(sources);
     await fetchGoals(total, sources); // Ensure fetchGoals completes before proceeding
   };
 

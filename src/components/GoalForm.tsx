@@ -7,6 +7,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import styles from './GoalForm.module.css';
+import type { Goal, IncomeSource } from '../types'; // Import Goal and IncomeSource from types.ts
 
 interface Session {
   user: {
@@ -19,38 +20,49 @@ interface GoalFormProps {
   session: Session;
   onSave: () => void;
   onCancel: () => void;
-  goal?: any;
+  goal?: Goal; // Optional: if provided, it's an edit form
   isOverAllocated: boolean; // Thêm prop này
 }
 
+interface GoalFormData {
+  name: string;
+  target_amount: number;
+  target_date: string | null;
+  allocation_type: Goal['allocation_type'];
+  allocation_value: number;
+  allocation_cycle: Goal['allocation_cycle'] | null;
+  source_income_id: string | null;
+}
+
 const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal, isOverAllocated }) => {
-  const { register, handleSubmit, control, watch, formState: { errors }, setValue } = useForm({
+  const { register, handleSubmit, control, watch, formState: { errors }, setValue } = useForm<GoalFormData>({
     defaultValues: {
       name: goal?.name || '',
-      target_amount: goal?.target_amount || '',
-      target_date: goal?.target_date || '',
-      allocation_type: goal?.allocation_type || '',
-      allocation_value: goal?.allocation_value || '',
-      allocation_cycle: goal?.allocation_cycle || '',
-      source_income_id: goal?.source_income_id || '',
+      target_amount: goal?.target_amount || 0, // Default to 0 for number type
+      target_date: goal?.target_date || null,
+      allocation_type: goal?.allocation_type || 'PERCENT_TOTAL',
+      allocation_value: goal?.allocation_value || 0, // Default to 0 for number type
+      allocation_cycle: goal?.allocation_cycle || 'monthly',
+      source_income_id: goal?.source_income_id || null,
     },
   });
 
-  const [incomeSources, setIncomeSources] = useState<any[]>([]);
+  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const allocationType = watch('allocation_type');
 
   useEffect(() => {
     const fetchIncomeSources = async () => {
       const { data, error } = await supabase
         .from('income_sources')
-        .select('id, name')
+        .select('id, name, amount, cycle') // Include amount and cycle
         .eq('user_id', session.user.id);
 
       if (error) {
-        toast.error('Error fetching income sources: ' + error.message);
+        console.error("Error fetching income sources:", error.message);
+        toast.error("Error fetching income sources", { description: error.message });
       } else {
         // Set default source_income_id if editing and it exists in fetched data
-        if (goal?.source_income_id && data.some((source: any) => source.id === goal.source_income_id)) {
+        if (goal?.source_income_id && data.some((source: IncomeSource) => source.id === goal.source_income_id)) {
           setValue('source_income_id', goal.source_income_id);
         }
         setIncomeSources(data || []);
@@ -62,16 +74,16 @@ const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal, is
     }
   }, [session, goal?.source_income_id, setValue]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (formData: GoalFormData) => {
     const newGoal = {
       user_id: session.user.id,
-      name: data.name,
-      target_amount: parseFloat(data.target_amount),
-      target_date: data.target_date || null,
-      allocation_type: data.allocation_type,
-      allocation_value: parseFloat(data.allocation_value),
-      allocation_cycle: data.allocation_cycle || null,
-      source_income_id: data.source_income_id || null,
+      name: formData.name,
+      target_amount: parseFloat(String(formData.target_amount)), // Ensure it's a number
+      current_amount: goal?.current_amount || 0, // Keep current_amount for existing goals, default to 0 for new
+      allocation_type: formData.allocation_type,
+      allocation_value: parseFloat(String(formData.allocation_value)), // Ensure it's a number
+      allocation_cycle: formData.allocation_cycle || null,
+      source_income_id: formData.source_income_id || null,
     };
 
     let error = null;
@@ -132,7 +144,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal, is
           control={control}
           rules={{ required: true }}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
               <SelectTrigger aria-labelledby="allocation-type-label">
                 <SelectValue placeholder="Select allocation type" />
               </SelectTrigger>
@@ -156,7 +168,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal, is
             control={control}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                 <SelectTrigger aria-labelledby="source-income-label">
                   <SelectValue placeholder="Select income source" />
                 </SelectTrigger>
@@ -188,7 +200,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ session, onSave, onCancel, goal, is
             control={control}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                 <SelectTrigger aria-labelledby="allocation-cycle-label">
                   <SelectValue placeholder="Select cycle" />
                 </SelectTrigger>

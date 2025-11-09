@@ -1,27 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.5'
 
-interface Goal {
-  id: string;
-  user_id: string;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  allocation_type: string;
-  allocation_value: number;
-  allocation_cycle: string | null;
-  source_income_id: string | null;
-  target_date: string | null; // Assuming target_date can be a string (ISO date)
-}
-
-interface IncomeSource {
-  id: string;
-  user_id: string;
-  name: string;
-  amount: number;
-  cycle: string;
-  status: 'active' | 'paused';
-}
-
 // Helper function to convert income amount to monthly equivalent
 const getMonthlyAmount = (amount: number, cycle: string): number => {
   switch (cycle) {

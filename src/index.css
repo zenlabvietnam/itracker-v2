@@ -1,5 +1,11 @@
 
 /* Basic reset or global styles can go here */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: sans-serif;

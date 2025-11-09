@@ -124,7 +124,7 @@ export default function AddEditGoalForm({ session, goal, onSuccess }: AddEditGoa
             }, 0);
         
             // --- Start Validation Logic ---
-            let warnings: string[] = [];
+            const warnings: string[] = [];
         
             // 1. Total Percentage Allocation Warning
             let totalPercentAllocated = 0;

@@ -10,6 +10,7 @@ export interface Goal {
   allocation_cycle?: 'daily' | 'weekly' | 'monthly' | 'yearly';
   source_income_id?: string;
   income_sources?: { id: string; name: string } | null;
+  forecasted_completion_date?: string | null; // Added this line
 }
 
 export interface IncomeSource {

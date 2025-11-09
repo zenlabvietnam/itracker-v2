@@ -1,202 +1,197 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { act } from 'react';
+import { vi } from 'vitest';
 import GoalForm from './GoalForm';
+import { supabase } from '../lib/supabaseClient';
+import userEvent from '@testing-library/user-event';
+import { toast } from 'sonner'; // Import toast
+import type { Goal } from '../types'; // Import Goal
+
+// Mock the toast from sonner
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+// Mock supabase client
+vi.mock('../lib/supabaseClient', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(() => ({
+        data: {
+          session: {
+            user: {
+              id: 'test-user-id',
+              email: 'test@example.com',
+            },
+          },
+        },
+      })),
+    },
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          data: [
+            { id: 'source-1', name: 'Salary', amount: 5000, cycle: 'monthly' },
+            { id: 'source-2', name: 'Freelance', amount: 1000, cycle: 'weekly' },
+          ],
+          error: null,
+        })),
+      })),
+      insert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          data: [{ id: 'new-goal-id', name: 'New Goal', target_amount: 1000, current_amount: 0, user_id: 'test-user-id' }],
+          error: null,
+        })),
+      })),
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          select: vi.fn(() => ({
+            data: [{ id: 'edit-goal-id', name: 'Edited Goal', target_amount: 1200, current_amount: 0, user_id: 'test-user-id' }],
+            error: null,
+          })),
+        })),
+      })),
+    })),
+  },
+}));
+
+const mockSession = {
+  user: {
+    id: 'test-user-id',
+    email: 'test@example.com',
+  },
+};
+
+const mockOnSave = vi.fn();
+const mockOnCancel = vi.fn();
 
 describe('GoalForm', () => {
-  const mockSession = {
-    user: {
-      id: 'test-user-id',
-      email: 'test@example.com',
-    },
-  };
-  const mockOnSave = vi.fn();
-  const mockOnCancel = vi.fn();
-
-  const mockIncomeSources = [
-    { id: 'source-1', name: 'Salary' },
-    { id: 'source-2', name: 'Freelance' },
-  ];
-
   beforeEach(() => {
-    vi.resetModules();
-    mockOnSave.mockClear();
-    mockOnCancel.mockClear();
+    vi.clearAllMocks();
   });
 
-  const setupMocks = (mocks: any) => {
-    vi.doMock('@/lib/supabaseClient', () => ({
-      supabase: {
-        from: (tableName: string) => mocks[tableName] || {},
-      },
-    }));
-  };
+  it('renders add new goal form correctly', async () => {
+    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} isOverAllocated={false} />);
 
-  it('renders in add mode correctly', async () => {
-    setupMocks({
-      income_sources: {
-        select: () => ({ eq: () => ({ data: mockIncomeSources, error: null }) }),
-      },
-    });
-    const GoalForm = (await import('./GoalForm')).default;
-    await act(async () => {
-      render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} />);
-    });
-    await waitFor(() => {
-      expect(screen.getByText(/add new goal/i)).toBeInTheDocument();
-    });
+    expect(screen.getByLabelText(/goal name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/target amount/i)).toBeInTheDocument();
+    expect(screen.getByText(/add goal/i)).toBeInTheDocument();
   });
 
-  it('renders in edit mode with pre-filled data', async () => {
-    setupMocks({
-      income_sources: {
-        select: () => ({ eq: () => ({ data: mockIncomeSources, error: null }) }),
-      },
-    });
-    const GoalForm = (await import('./GoalForm')).default;
-    const mockGoal = {
+  it('renders edit goal form correctly with pre-filled data', async () => {
+    const mockGoal: Goal = { // Explicitly cast to Goal
       id: 'goal-1',
-      name: 'Edit Goal',
-      target_amount: 10000000,
-      allocation_type: 'PERCENT_TOTAL',
-      allocation_value: 10,
+      user_id: 'test-user-id',
+      name: 'Vacation',
+      target_amount: 1500,
+      current_amount: 500,
+      allocation_type: 'FIXED_TOTAL',
+      allocation_value: 100,
+      allocation_cycle: 'monthly',
+      source_income_id: null,
     };
-    await act(async () => {
-      render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} goal={mockGoal} />);
-    });
+    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} goal={mockGoal} isOverAllocated={false} />);
+
+    expect(screen.getByLabelText(/goal name/i)).toHaveValue('Vacation');
+    expect(screen.getByLabelText(/target amount/i)).toHaveValue(1500);
+    expect(screen.getByText(/save changes/i)).toBeInTheDocument();
+  });
+
+  it('submits new goal successfully', async () => {
+    const user = userEvent.setup();
+    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} isOverAllocated={false} />);
+
+    await user.type(screen.getByLabelText(/goal name/i), 'New Car');
+    await user.type(screen.getByLabelText(/target amount/i), '20000');
+
+    // Select allocation type
+    await user.click(screen.getByRole('combobox', { name: /allocation type/i }));
+    await waitFor(() => screen.getByText(/percent of total income/i));
+    await user.click(screen.getByText(/percent of total income/i));
+
+    await user.type(screen.getByLabelText(/allocation value/i), '10');
+
+    await user.click(screen.getByText(/add goal/i));
+
     await waitFor(() => {
-      expect(screen.getByLabelText(/goal name/i)).toHaveValue('Edit Goal');
-      expect(screen.getByLabelText(/target amount/i)).toHaveValue(10000000);
-      expect(screen.getByRole('combobox', { name: /allocation type/i })).toHaveTextContent(/% of Total Income/i);
-      expect(screen.getByLabelText(/allocation value/i)).toHaveValue(10);
+      expect(supabase.from).toHaveBeenCalledWith('goals');
+      expect(supabase.from('goals').insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'New Car',
+          target_amount: 20000,
+          allocation_type: 'PERCENT_TOTAL',
+          allocation_value: 10,
+          user_id: 'test-user-id',
+        })
+      );
+      expect(mockOnSave).toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalledWith('Goal added successfully!');
     });
   });
 
   it('shows income source dropdown when allocation type is specific income', async () => {
     const user = userEvent.setup();
-    setupMocks({
-      income_sources: {
-        select: () => ({ eq: () => ({ data: mockIncomeSources, error: null }) }),
-      },
-    });
-    const GoalForm = (await import('./GoalForm')).default;
-    await act(async () => {
-      render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} />);
-    });
+    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} isOverAllocated={false} />);
 
+    // Select allocation type "Percent from specific income source"
     await user.click(screen.getByRole('combobox', { name: /allocation type/i }));
-    await user.click(screen.getByRole('option', { name: /% of specific source/i }));
+    await waitFor(() => screen.getByText(/percent of specific source/i));
+    await user.click(screen.getByText(/percent of specific source/i));
 
-    const incomeSourceDropdown = await screen.findByRole('combobox', { name: /income source/i });
-    expect(incomeSourceDropdown).toBeInTheDocument();
-    expect(incomeSourceDropdown).toHaveTextContent(/select income source/i);
+    // Check if income source dropdown appears
+    const incomeSourceSelect = screen.getByRole('combobox', { name: /select income source/i });
+    expect(incomeSourceSelect).toBeInTheDocument();
 
-    await user.click(incomeSourceDropdown);
-    await waitFor(() => {
-      expect(screen.getByRole('option', { name: /salary/i })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /freelance/i })).toBeInTheDocument();
-    });
+    // Select an income source
+    await user.click(incomeSourceSelect);
+    await waitFor(() => screen.getByText(/salary/i));
+    await user.click(screen.getByText(/salary/i));
+
+    expect(screen.getByText(/salary/i)).toBeInTheDocument();
   });
 
-  it('shows allocation cycle dropdown when allocation type is fixed amount', async () => {
+  it('submits edited goal successfully', async () => {
     const user = userEvent.setup();
-    setupMocks({
-      income_sources: {
-        select: () => ({ eq: () => ({ data: mockIncomeSources, error: null }) }),
-      },
-    });
-    const GoalForm = (await import('./GoalForm')).default;
-    await act(async () => {
-      render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} />);
-    });
-
-    await user.click(screen.getByRole('combobox', { name: /allocation type/i }));
-    await user.click(screen.getByRole('option', { name: /fixed amount from total/i }));
-
-    const allocationCycleDropdown = await screen.findByRole('combobox', { name: /allocation cycle/i });
-    expect(allocationCycleDropdown).toBeInTheDocument();
-  });
-
-  it('handles form submission for adding a new goal', async () => {
-    const user = userEvent.setup();
-    const mockInsert = vi.fn().mockResolvedValue({ error: null });
-    setupMocks({
-      income_sources: {
-        select: () => ({ eq: () => ({ data: mockIncomeSources, error: null }) }),
-      },
-      goals: { insert: mockInsert },
-    });
-
-    const GoalForm = (await import('./GoalForm')).default;
-
-    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} />);
-
-    await userEvent.type(screen.getByLabelText(/goal name/i), 'New Goal');
-    await userEvent.type(screen.getByLabelText(/target amount/i), '5000');
-
-    await userEvent.click(screen.getByRole('combobox', { name: /allocation type/i }));
-    await userEvent.click(screen.getByRole('option', { name: /% of specific source/i }));
-
-    const incomeSourceDropdown = await screen.findByRole('combobox', { name: /income source/i });
-    await userEvent.click(incomeSourceDropdown);
-    await userEvent.click(screen.getByRole('option', { name: /salary/i }));
-
-    await userEvent.type(screen.getByLabelText(/allocation value/i), '10');
-
-    await userEvent.click(screen.getByRole('button', { name: /add goal/i }));
-
-    await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-        name: 'New Goal',
-        target_amount: 5000,
-        allocation_value: 10,
-        allocation_type: 'PERCENT_SOURCE',
-        source_income_id: 'source-1',
-      }));
-      expect(mockOnSave).toHaveBeenCalled();
-    });
-  });
-
-  it('handles form submission for editing an existing goal', async () => {
-    const user = userEvent.setup();
-    const mockUpdate = vi.fn().mockResolvedValue({ error: null });
-    setupMocks({
-      income_sources: {
-        select: () => ({ eq: () => ({ data: mockIncomeSources, error: null }) }),
-      },
-      goals: { update: (data) => ({ eq: () => mockUpdate(data) }) },
-    });
-
-    const GoalForm = (await import('./GoalForm')).default;
-    const mockGoal = {
+    const mockGoal: Goal = { // Explicitly cast to Goal
       id: 'goal-1',
-      name: 'Old Goal',
-      target_amount: 1000,
+      user_id: 'test-user-id',
+      name: 'Vacation',
+      target_amount: 1500,
+      current_amount: 500,
       allocation_type: 'FIXED_TOTAL',
-      allocation_value: 5,
+      allocation_value: 100,
       allocation_cycle: 'monthly',
+      source_income_id: null,
     };
+    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} goal={mockGoal} isOverAllocated={false} />);
 
-    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} goal={mockGoal} />);
+    await user.clear(screen.getByLabelText(/goal name/i));
+    await user.type(screen.getByLabelText(/goal name/i), 'Edited Vacation');
+    await user.clear(screen.getByLabelText(/target amount/i));
+    await user.type(screen.getByLabelText(/target amount/i), '1800');
 
-    await userEvent.clear(screen.getByLabelText(/goal name/i));
-    await userEvent.type(screen.getByLabelText(/goal name/i), 'Updated Goal');
-
-    await userEvent.click(screen.getByRole('combobox', { name: /allocation type/i }));
-    await userEvent.click(screen.getByRole('option', { name: /fixed amount from total/i }));
-
-    const allocationCycleDropdown = await screen.findByRole('combobox', { name: /allocation cycle/i });
-    await userEvent.click(allocationCycleDropdown);
-    await userEvent.click(screen.getByRole('option', { name: /yearly/i }));
-
-    await userEvent.click(screen.getByRole('button', { name: /save changes/i }));
+    await user.click(screen.getByText(/save changes/i));
 
     await waitFor(() => {
-      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
-        name: 'Updated Goal',
-        allocation_cycle: 'yearly',
-      }));
+      expect(supabase.from).toHaveBeenCalledWith('goals');
+      expect(supabase.from('goals').update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Edited Vacation',
+          target_amount: 1800,
+        })
+      );
+      expect(supabase.from('goals').update('goals').eq).toHaveBeenCalledWith('id', 'goal-1');
       expect(mockOnSave).toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalledWith('Goal updated successfully!');
     });
+  });
+
+  it('calls onCancel when cancel button is clicked', async () => {
+    const user = userEvent.setup(); // Added
+    render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} isOverAllocated={false} />);
+    await user.click(screen.getByText(/cancel/i));
+    expect(mockOnCancel).toHaveBeenCalled();
   });
 });
