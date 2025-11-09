@@ -90,7 +90,7 @@ describe('GoalForm', () => {
       allocation_type: 'FIXED_TOTAL',
       allocation_value: 100,
       allocation_cycle: 'monthly',
-      source_income_id: null,
+      source_income_id: undefined,
     };
     render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} goal={mockGoal} isOverAllocated={false} />);
 
@@ -163,7 +163,7 @@ describe('GoalForm', () => {
       allocation_type: 'FIXED_TOTAL',
       allocation_value: 100,
       allocation_cycle: 'monthly',
-      source_income_id: null,
+      source_income_id: undefined,
     };
     render(<GoalForm session={mockSession} onSave={mockOnSave} onCancel={mockOnCancel} goal={mockGoal} isOverAllocated={false} />);
 

@@ -1,0 +1,70 @@
+.chartContainer {
+  background-color: var(--background-card); /* Assuming a CSS variable for card background */
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--shadow-md); /* Assuming a CSS variable for shadow */
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.chartTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: var(--text-primary); /* Assuming a CSS variable for primary text color */
+}
+
+.noDataMessage {
+  color: var(--text-secondary); /* Assuming a CSS variable for secondary text color */
+  font-style: italic;
+  padding: 20px;
+}
+
+.customTooltip {
+  background-color: var(--background-tooltip); /* Assuming a CSS variable for tooltip background */
+  border: 1px solid var(--border-color); /* Assuming a CSS variable for border color */
+  padding: 10px;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.tooltipLabel {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.tooltipValue {
+  margin-bottom: 3px;
+}
+
+.tooltipPercentage {
+  font-style: italic;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 15px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.legendColor {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.legendText {
+  white-space: nowrap;
+}

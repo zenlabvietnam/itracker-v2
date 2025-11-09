@@ -1,0 +1,95 @@
+/* AppHeader.module.css */
+
+.headerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: -2rem -2rem 2rem -2rem; /* top, horizontal, bottom */
+  width: calc(100% + 4rem); /* Counteract horizontal padding */
+  padding: 1rem 2rem; /* Keep vertical padding, match horizontal to parent */
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between; /* Pushes title/tagline to left, auth status to right */
+  align-items: center;
+  width: 100%; /* Ensure it takes full width of headerContainer */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 1rem; /* Space between elements */
+}
+
+.appTitleGroup {
+  text-align: left; /* Align title and tagline to the left */
+}
+
+.title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 0.25rem; /* Reduced margin to bring tagline closer */
+  color: #1a202c; /* text-gray-900 */
+}
+
+.tagline {
+  font-size: 1rem; /* text-base */
+  color: #4a5568; /* text-gray-600 */
+  margin-bottom: 0; /* Remove bottom margin as it's part of appTitleGroup */
+}
+
+.mainNav {
+  display: flex;
+  gap: 1.5rem; /* Space between navigation links */
+  /* flex-grow: 1; */ /* Removed as it's now a column layout */
+  justify-content: center; /* Center the nav links */
+  flex-wrap: wrap; /* Allow nav links to wrap */
+  margin-top: 1rem; /* Add space above navigation */
+}
+
+.navLink {
+  color: #4a5568; /* text-gray-600 */
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.navLink:hover {
+  background-color: #edf2f7; /* gray-100 */
+  color: #1a202c; /* text-gray-900 */
+}
+
+.authStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Space between email and logout button */
+  text-align: right; /* Align auth status to the right */
+}
+
+.emailText {
+  font-size: 0.875rem; /* text-sm */
+  color: #4a5568; /* text-gray-600 */
+  margin-bottom: 0; /* Remove margin */
+}
+
+.emailText strong {
+  font-family: monospace; /* font-mono */
+  color: #1a202c; /* text-gray-900 */
+}
+
+.logoutButton {
+  /* Inherit styles from Button component, but ensure icon sizing */
+  /* Adjust if default button styles are too prominent */
+  color: #4a5568; /* text-gray-600 */
+}
+
+.logoutButton:hover {
+  color: #1a202c; /* text-gray-900 */
+}
+
+.logoutIcon {
+  width: 1.25rem; /* Adjust icon size */
+  height: 1.25rem;
+}

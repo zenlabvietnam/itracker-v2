@@ -1,0 +1,55 @@
+.card {
+  background-color: var(--background-card); /* Assuming a CSS variable for card background */
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  color: var(--text-color); /* Assuming a CSS variable for text color */
+  width: 100%; /* Make it take full width of its parent */
+  text-align: center; /* Center text content */
+}
+
+.card.error {
+  border: 1px solid var(--color-error); /* Assuming a CSS variable for error color */
+  color: var(--color-error);
+}
+
+.title {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: var(--text-color-heading); /* Assuming a CSS variable for heading text color */
+}
+
+.progressBarContainer {
+  width: 100%;
+  background-color: var(--progress-bar-background); /* Assuming a CSS variable */
+  border-radius: 5px;
+  height: 10px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: var(--progress-bar-fill); /* Assuming a CSS variable */
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
+}
+
+.progressText {
+  font-size: 0.9em;
+  color: var(--text-color-secondary); /* Assuming a CSS variable */
+}
+
+.link {
+  display: inline-block;
+  margin-top: 15px;
+  color: var(--link-color); /* Assuming a CSS variable */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

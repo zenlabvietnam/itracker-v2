@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import IncomeSourcesPage from './pages/IncomeSourcesPage';
 import GoalsPage from './pages/GoalsPage'; // Import GoalsPage
+import ReportsPage from './pages/ReportsPage'; // Import ReportsPage
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 
@@ -57,6 +58,14 @@ function App() {
           element={
             <ProtectedRoute session={session}>
               <GoalsPage session={session!} />
+            </ProtectedRoute>
+          }
+        />
+        <Route // New route for ReportsPage
+          path="/reports"
+          element={
+            <ProtectedRoute session={session}>
+              <ReportsPage session={session!} />
             </ProtectedRoute>
           }
         />

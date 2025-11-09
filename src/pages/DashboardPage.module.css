@@ -23,27 +23,10 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md - consistent with other cards */
   width: 100%; /* w-full */
   max-width: 48rem; /* max-w-2xl */
-  text-align: center;
-}
-
-.title {
-  font-size: 1.875rem; /* text-3xl */
-  font-weight: 700; /* font-bold */
-  margin-bottom: 1.5rem; /* mb-6 */
-  color: #1a202c; /* text-gray-900 */
-}
-
-.emailSection {
-  margin-bottom: 1rem; /* mb-4 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem; /* space-x-2 */
-}
-
-.emailText strong {
-  font-family: monospace; /* font-mono */
-  color: #1a202c; /* text-gray-900 */
+  display: flex; /* Add flexbox for centering children */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center children horizontally */
+  gap: 1.5rem; /* Add some space between children */
 }
 
 .contentCard {
@@ -54,6 +37,10 @@
   border: 1px solid #e2e8f0; /* border-gray-200 - subtle border */
   margin-top: 2rem; /* mt-8 */
   width: 100%; /* w-full */
+  display: flex; /* Add flexbox for centering children */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center children horizontally */
+  gap: 1.5rem; /* Add some space between children */
 }
 
 .loadingMessage {

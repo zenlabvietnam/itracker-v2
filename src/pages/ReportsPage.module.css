@@ -1,0 +1,50 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.pageContent {
+  flex-grow: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+}
+
+.filters {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.chartContainer {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.noDataMessage {
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted-foreground);
+  font-size: 1.125rem;
+}
+.chartContainer {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}

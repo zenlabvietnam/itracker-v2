@@ -6,6 +6,8 @@ import GoalForm from '../components/GoalForm';
 import { toast } from 'sonner';
 import styles from './GoalsPage.module.css';
 import type { IncomeSource, Goal } from '../types'; // Import IncomeSource and Goal from types
+import AppHeader from '../components/AppHeader'; // Import AppHeader
+import dashboardStyles from './DashboardPage.module.css'; // Import DashboardPage styles
 
 interface Session {
   user: {
@@ -96,20 +98,43 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
         }, [session.user.id]);  
     const fetchGoals = useCallback(async (currentTotalIncome: number, allIncomeSources: IncomeSource[]) => {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: goalsData, error: goalsError } = await supabase
         .from('goals')
-        .select('*, income_sources(name), forecasted_completion_date') // Sửa đổi câu lệnh select
+        .select('*, income_sources(name), forecasted_completion_date')
         .eq('user_id', session.user.id);
   
-      if (error) {
-        setError(error.message);
+      if (goalsError) {
+        setError(goalsError.message);
+        setLoading(false);
+        return;
       }
-      else if (data) {
-        setGoals(data);
-        const totalAllocated = data.reduce((sum, goal) => {
+  
+      if (goalsData && goalsData.length > 0) {
+        const goalIds = goalsData.map(goal => goal.id);
+        const { data: calculatedAmounts, error: rpcError } = await supabase.rpc('get_goals_current_amounts', { p_goal_ids: goalIds });
+  
+        if (rpcError) {
+          console.error('Error fetching calculated amounts:', rpcError.message);
+          // Proceed with existing current_amount if RPC fails
+          setGoals(goalsData);
+        } else {
+          const updatedGoals = goalsData.map(goal => {
+            const calculated = calculatedAmounts.find((ca: { goal_id: string; calculated_current_amount: number }) => ca.goal_id === goal.id);
+            return {
+              ...goal,
+              current_amount: calculated ? calculated.calculated_current_amount : goal.current_amount,
+            };
+          });
+          setGoals(updatedGoals);
+        }
+  
+        const totalAllocated = goalsData.reduce((sum, goal) => {
           return sum + calculateMonthlyAllocation(goal, allIncomeSources, currentTotalIncome);
         }, 0);
-        setIsOverAllocated(totalAllocated > currentTotalIncome); // Cập nhật isOverAllocated
+        setIsOverAllocated(totalAllocated > currentTotalIncome);
+      } else {
+        setGoals([]);
+        setIsOverAllocated(false);
       }
       setLoading(false);
     }, [session.user.id, calculateMonthlyAllocation]);
@@ -121,6 +146,29 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
         fetchGoals(total, sources);
       };
       initializeData();
+
+      // Setup Realtime subscriptions
+      const goalsChannel = supabase
+        .channel('public:goals')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, payload => {
+          console.log('Goal change received!', payload);
+          initializeData(); // Re-fetch all data on goal changes
+        })
+        .subscribe();
+
+      const incomeSourcesChannel = supabase
+        .channel('public:income_sources')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'income_sources' }, payload => {
+          console.log('Income source change received!', payload);
+          initializeData(); // Re-fetch all data on income source changes
+        })
+        .subscribe();
+
+      // Cleanup function
+      return () => {
+        supabase.removeChannel(goalsChannel);
+        supabase.removeChannel(incomeSourcesChannel);
+      };
     }
   }, [session, fetchTotalIncome, fetchGoals]);
 
@@ -168,8 +216,9 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
+    <div className={dashboardStyles.container}>
+      <div className={dashboardStyles.mainCard}>
+        <AppHeader session={session} />
         <h1 className={styles.title}>Your Financial Goals</h1>
         {isOverAllocated && (
           <div className={styles.warningMessage}>
@@ -190,79 +239,79 @@ const GoalsPage: React.FC<GoalsPageProps> = ({ session }) => {
             <GoalForm session={session} onSave={handleGoalSave} onCancel={() => setIsAddFormOpen(false)} isOverAllocated={isOverAllocated} />
           </DialogContent>
         </Dialog>
-      </div>
 
-      {/* Edit Goal Dialog */}
-      <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Goal</DialogTitle>
-            <DialogDescription>
-              Update the details of your financial goal.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedGoal && (
-            <GoalForm session={session} onSave={handleGoalSave} onCancel={() => setIsEditFormOpen(false)} goal={selectedGoal} isOverAllocated={isOverAllocated} />
-          )}
-        </DialogContent>
-      </Dialog>
+        {/* Edit Goal Dialog */}
+        <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Goal</DialogTitle>
+              <DialogDescription>
+                Update the details of your financial goal.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedGoal && (
+              <GoalForm session={session} onSave={handleGoalSave} onCancel={() => setIsEditFormOpen(false)} goal={selectedGoal} isOverAllocated={isOverAllocated} />
+            )}
+          </DialogContent>
+        </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the goal "{goalToDelete?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className={styles.actions}>
-            <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteConfirm}>Delete</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {goals.length === 0 ? (
-        <p>No goals set yet. Start by adding a new goal!</p>
-      ) : (
-        <div className={styles.goalsGrid}>
-          {goals.map((goal) => (
-            <div key={goal.id} className={styles.goalCard}>
-              <h2 className={styles.goalName}>{goal.name}</h2>
-              <p className={styles.goalProgressText}>
-                Progress: {goal.current_amount.toLocaleString()} / {goal.target_amount.toLocaleString()}
-                {goal.target_amount > 0 && (
-                  <span> ({((goal.current_amount / goal.target_amount) * 100).toFixed(2)}% hoàn thành)</span>
-                )}
-              </p>
-              <div className={styles.progressBarContainer}>
-                <div
-                  className={styles.progressBarFill}
-                  style={{ width: `${Math.min(100, (goal.current_amount / goal.target_amount) * 100)}%` }}
-                ></div>
-              </div>
-              {goal.forecasted_completion_date && (
-                <p className={styles.goalForecastText}>
-                  Estimated Completion: {new Date(goal.forecasted_completion_date).toLocaleDateString()}
-                </p>
-              )}
-              {goal.current_amount >= goal.target_amount && (
-                <p className={styles.goalCompletedText}>Hoàn thành!</p>
-              )}
-              <p className={styles.goalAllocationText}>
-                Allocation: {goal.allocation_value}{goal.allocation_type === 'PERCENT_TOTAL' ? '% of Total Income' : ''}
-                {goal.allocation_type === 'PERCENT_SOURCE' && goal.income_sources?.name ? `% from Source ${goal.income_sources.name}` : ''}
-                {goal.allocation_type === 'FIXED_SOURCE' && goal.income_sources?.name ? ` VND/month from Source ${goal.income_sources.name}` : ''}
-              </p>
-              <div className={styles.cardActions}>
-                <Button variant="outline" size="sm" onClick={() => handleEditClick(goal)}>Edit</Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(goal)}>Delete</Button>
-              </div>
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the goal "{goalToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className={styles.actions}>
+              <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm}>Delete</Button>
             </div>
-          ))}
-        </div>
-      )}
+          </DialogContent>
+        </Dialog>
+
+        {goals.length === 0 ? (
+          <p>No goals set yet. Start by adding a new goal!</p>
+        ) : (
+          <div className={styles.goalsGrid}>
+            {goals.map((goal) => (
+              <div key={goal.id} className={styles.goalCard}>
+                <h2 className={styles.goalName}>{goal.name}</h2>
+                <p className={styles.goalProgressText}>
+                  Progress: {goal.current_amount.toLocaleString()} / {goal.target_amount.toLocaleString()}
+                  {goal.target_amount > 0 && (
+                    <span> ({((goal.current_amount / goal.target_amount) * 100).toFixed(2)}% hoàn thành)</span>
+                  )}
+                </p>
+                <div className={styles.progressBarContainer}>
+                  <div
+                    className={styles.progressBarFill}
+                    style={{ width: `${Math.min(100, (goal.current_amount / goal.target_amount) * 100)}%` }}
+                  ></div>
+                </div>
+                {goal.forecasted_completion_date && (
+                  <p className={styles.goalForecastText}>
+                    Estimated Completion: {new Date(goal.forecasted_completion_date).toLocaleDateString()}
+                  </p>
+                )}
+                {goal.current_amount >= goal.target_amount && (
+                  <p className={styles.goalCompletedText}>Hoàn thành!</p>
+                )}
+                <p className={styles.goalAllocationText}>
+                  Allocation: {goal.allocation_value}{goal.allocation_type === 'PERCENT_TOTAL' ? '% of Total Income' : ''}
+                  {goal.allocation_type === 'PERCENT_SOURCE' && goal.income_sources?.name ? `% from Source ${goal.income_sources.name}` : ''}
+                  {goal.allocation_type === 'FIXED_SOURCE' && goal.income_sources?.name ? ` VND/month from Source ${goal.income_sources.name}` : ''}
+                </p>
+                <div className={styles.cardActions}>
+                  <Button variant="outline" size="sm" onClick={() => handleEditClick(goal)}>Edit</Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(goal)}>Delete</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

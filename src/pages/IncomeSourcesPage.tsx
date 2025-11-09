@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react'; // Import Trash2 icon
 
 import styles from './IncomeSourcesPage.module.css';
+import AppHeader from '../components/AppHeader'; // Import AppHeader
+import dashboardStyles from './DashboardPage.module.css'; // Import DashboardPage styles
 
 interface IncomeSource {
   id: string;
@@ -146,36 +148,35 @@ export default function IncomeSourcesPage({ session }: IncomeSourcesPageProps) {
   }
 
   return (
-    <div className={styles.pageContainer}>
-      <div className={styles.maxWContainer}>
-        <header className={styles.header}>
-          <h1 className={styles.headerTitle}>
-            Income Sources
-          </h1>
-          {/* Add New Source Dialog */}
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogTrigger asChild>
-              <Button>Add New Source</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Income Source</DialogTitle>
-                <DialogDescription>
-                  Add a new income source to track your earnings.
-                </DialogDescription>
-              </DialogHeader>
-              <AddIncomeSourceForm
-                session={session}
-                onSuccess={() => {
-                  setIsAddModalOpen(false);
-                  fetchIncomeSources();
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        </header>
+    <div className={dashboardStyles.container}>
+      <div className={dashboardStyles.mainCard}>
+        <AppHeader session={session} />
+        <h1 className={styles.headerTitle}>
+          Income Sources
+        </h1>
+        {/* Add New Source Dialog */}
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogTrigger asChild>
+            <Button>Add New Source</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Income Source</DialogTitle>
+              <DialogDescription>
+                Add a new income source to track your earnings.
+              </DialogDescription>
+            </DialogHeader>
+            <AddIncomeSourceForm
+              session={session}
+              onSuccess={() => {
+                setIsAddModalOpen(false);
+                fetchIncomeSources();
+              }}
+            />
+          </DialogContent>
+        </Dialog>
 
-        <main>
+        <main className={styles.fullWidthMainContent}>
           {incomeSources.length === 0 ? (
             <div className={styles.noIncomeContainer}>
               <p className={styles.noIncomeText}>No income sources found. Add one to get started!</p>

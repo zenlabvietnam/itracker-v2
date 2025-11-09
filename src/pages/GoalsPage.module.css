@@ -19,21 +19,10 @@
 }
 
 .goalsGrid {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr)); /* grid-cols-1 */
+  display: flex;
+  flex-direction: column;
   gap: 1rem; /* gap-4 */
-}
-
-@media (min-width: 768px) {
-  .goalsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)); /* md:grid-cols-2 */
-  }
-}
-
-@media (min-width: 1024px) {
-  .goalsGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)); /* lg:grid-cols-3 */
-  }
+  width: 100%; /* Ensure it takes full width */
 }
 
 .goalCard {
@@ -41,6 +30,7 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
   border-radius: 0.5rem; /* rounded-lg */
   padding: 1rem; /* p-4 */
+  width: 100%; /* Ensure it takes full width */
 }
 
 .goalName {
