@@ -8,6 +8,7 @@ import IncomeSourcesPage from './pages/IncomeSourcesPage';
 import GoalsPage from './pages/GoalsPage'; // Import GoalsPage
 import ReportsPage from './pages/ReportsPage'; // Import ReportsPage
 import ProtectedRoute from './components/ProtectedRoute';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -34,45 +35,47 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={session ? <Navigate to="/" /> : <LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute session={session}>
-              <DashboardPage session={session!} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/income-sources"
-          element={
-            <ProtectedRoute session={session}>
-              <IncomeSourcesPage session={session!} />
-            </ProtectedRoute>
-          }
-        />
-        <Route // New route for GoalsPage
-          path="/goals"
-          element={
-            <ProtectedRoute session={session}>
-              <GoalsPage session={session!} />
-            </ProtectedRoute>
-          }
-        />
-        <Route // New route for ReportsPage
-          path="/reports"
-          element={
-            <ProtectedRoute session={session}>
-              <ReportsPage session={session!} />
-            </ProtectedRoute>
-          }
-        />
-        {/* Add other protected routes here later */}
-      </Routes>
-      <Toaster />
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter basename="/itracker-v2/">
+        <Routes>
+          <Route path="/login" element={session ? <Navigate to="/" /> : <LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute session={session}>
+                <DashboardPage session={session!} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/income-sources"
+            element={
+              <ProtectedRoute session={session}>
+                <IncomeSourcesPage session={session!} />
+              </ProtectedRoute>
+            }
+          />
+          <Route // New route for GoalsPage
+            path="/goals"
+            element={
+              <ProtectedRoute session={session}>
+                <GoalsPage session={session!} />
+              </ProtectedRoute>
+            }
+          />
+          <Route // New route for ReportsPage
+            path="/reports"
+            element={
+              <ProtectedRoute session={session}>
+                <ReportsPage session={session!} />
+              </ProtectedRoute>
+            }
+          />
+          {/* Add other protected routes here later */}
+        </Routes>
+        <Toaster />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

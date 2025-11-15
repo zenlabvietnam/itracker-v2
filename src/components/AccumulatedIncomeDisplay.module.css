@@ -8,12 +8,14 @@
   font-size: 1.25rem; /* text-xl */
   font-weight: 600; /* font-semibold */
   margin-bottom: 1rem; /* mb-4 */
-  color: #1a202c; /* text-gray-900 */
+  color: var(--text-color, #1a202c); /* text-gray-900 */
+  transition: color 0.3s ease;
 }
 
 .amount {
   font-size: 3rem; /* text-5xl */
   font-weight: 800; /* font-extrabold */
-  color: #10b981; /* green-500 - consistent with goalCompletedText */
+  color: var(--primary-color, #10b981); /* green-500 - consistent with goalCompletedText */
   margin-bottom: 2rem; /* mb-8 */
+  transition: color 0.3s ease;
 }

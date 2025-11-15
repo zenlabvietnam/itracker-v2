@@ -27,7 +27,7 @@ const IncomeContributionChart: React.FC<IncomeContributionChartProps> = ({ indiv
     color: COLORS[index % COLORS.length],
   }));
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number; percentage: number; color: string; }; }>; }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

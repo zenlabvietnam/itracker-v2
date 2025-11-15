@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
-import { startOfMonth, differenceInSeconds } from 'date-fns';
+import { format, startOfDay, startOfWeek, startOfMonth, startOfYear, differenceInSeconds } from 'date-fns';
 import AccumulatedIncomeDisplay from '../components/AccumulatedIncomeDisplay';
 import GoalSummaryCard from '../components/GoalSummaryCard'; // Import GoalSummaryCard
 import IncomeContributionChart from '../components/IncomeContributionChart'; // Import IncomeContributionChart
@@ -26,6 +26,8 @@ export default function DashboardPage({ session }: DashboardPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [activeIncomeSourcesForLocalCalc, setActiveIncomeSourcesForLocalCalc] = useState<IncomeSource[]>([]);
   const [initialFetchTimestamp, setInitialFetchTimestamp] = useState<Date | null>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState<'today' | 'week' | 'month' | 'year' | 'custom'>('month'); // Default to 'month'
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(startOfMonth(new Date()));
 
   // States for Goals Summary
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -56,7 +58,25 @@ export default function DashboardPage({ session }: DashboardPageProps) {
 
   // Effect for initial income data fetch when date range or user changes
   useEffect(() => {
-    const localCalcStartDate = startOfMonth(new Date()); // Default to start of month
+    const getStartDate = () => {
+      const now = new Date();
+      switch (selectedDateRange) {
+        case 'today':
+          return startOfDay(now);
+        case 'week':
+          return startOfWeek(now, { weekStartsOn: 1 }); // Monday
+        case 'month':
+          return startOfMonth(now);
+        case 'year':
+          return startOfYear(now);
+        case 'custom':
+          return customStartDate || startOfMonth(now); // Fallback to start of month if customStartDate is not set
+        default:
+          return startOfMonth(now);
+      }
+    };
+
+    const localCalcStartDate = getStartDate();
 
     const fetchInitialData = async () => {
       setLoading(true);
@@ -84,7 +104,7 @@ export default function DashboardPage({ session }: DashboardPageProps) {
 
     fetchInitialData();
 
-  }, [session.user.id]); // Dependencies are the actual values that should trigger a re-fetch
+  }, [session.user.id, selectedDateRange, customStartDate]); // Dependencies are the actual values that should trigger a re-fetch
 
   // Effect for fetching goals
   const fetchGoals = useCallback(async () => {
@@ -165,13 +185,64 @@ export default function DashboardPage({ session }: DashboardPageProps) {
     }, 1000); // Update every second
 
     return () => clearInterval(interval);
-  }, [loading, error]); // Dependencies for this useEffect
+  }, [loading, error, initialFetchTimestamp]); // Dependencies for this useEffect
 
   return (
     <div className={styles.container}>
       <div className={styles.mainCard}>
         <AppHeader session={session} />
-        <AccumulatedIncomeDisplay totalAccumulatedIncome={totalAccumulatedIncome} selectedDateRange="month" />
+        <div className={styles.dateRangeControls}>
+          <label htmlFor="customStartDate" className={styles.startDateLabel}>Start Date:</label>
+          <div className={styles.dateRangeSelector}>
+            <button
+              className={`${styles.dateRangeButton} ${selectedDateRange === 'today' ? styles.activeButton : ''}`}
+              onClick={() => {
+                setSelectedDateRange('today');
+                setCustomStartDate(startOfDay(new Date()));
+              }}
+            >
+              Today
+            </button>
+            <button
+              className={`${styles.dateRangeButton} ${selectedDateRange === 'week' ? styles.activeButton : ''}`}
+              onClick={() => {
+                setSelectedDateRange('week');
+                setCustomStartDate(startOfWeek(new Date(), { weekStartsOn: 1 }));
+              }}
+            >
+              Week
+            </button>
+            <button
+              className={`${styles.dateRangeButton} ${selectedDateRange === 'month' ? styles.activeButton : ''}`}
+              onClick={() => {
+                setSelectedDateRange('month');
+                setCustomStartDate(startOfMonth(new Date()));
+              }}
+            >
+              Month
+            </button>
+            <button
+              className={`${styles.dateRangeButton} ${selectedDateRange === 'year' ? styles.activeButton : ''}`}
+              onClick={() => {
+                setSelectedDateRange('year');
+                setCustomStartDate(startOfYear(new Date()));
+              }}
+            >
+              Year
+            </button>
+            <input
+              type="date"
+              id="customStartDate"
+              className={styles.startDateInput}
+              value={customStartDate ? format(customStartDate, 'yyyy-MM-dd') : ''}
+              onChange={(e) => {
+                setSelectedDateRange('custom'); // When user manually changes date, set range to custom
+                setCustomStartDate(e.target.value ? new Date(e.target.value) : null);
+              }}
+            />
+          </div>
+        </div>
+        <AccumulatedIncomeDisplay totalAccumulatedIncome={totalAccumulatedIncome} selectedDateRange={selectedDateRange} />
         <GoalSummaryCard goals={goals} loading={loadingGoals} error={errorGoals} />
         <div className={styles.contentCard}>
           <IncomeContributionChart individualSources={individualSources} totalAccumulatedIncome={totalAccumulatedIncome} />

@@ -9,6 +9,7 @@
 body {
   margin: 0;
   font-family: sans-serif;
-  background-color: #f7fafc; /* light mode background */
-  color: #1a202c; /* light mode text */
+  background-color: var(--background-color, #f7fafc);
+  color: var(--text-color, #1a202c);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

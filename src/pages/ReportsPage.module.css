@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--background-color, #f7fafc);
+  color: var(--text-color, #1a202c);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .pageContent {
@@ -18,7 +19,8 @@
   font-size: 2.5rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
-  color: var(--primary);
+  color: var(--primary-color, #1a202c);
+  transition: color 0.3s ease;
 }
 
 .filters {
@@ -30,21 +32,17 @@
 .chartContainer {
   margin-top: 2rem;
   padding: 1.5rem;
-  background-color: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background-color: var(--background-color, #ffffff);
+  border-radius: 0.5rem; /* Assuming --radius maps to 0.5rem */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Assuming --shadow maps to a default shadow */
+  transition: background-color 0.3s ease;
+  height: 400px; /* Ensure the container has a fixed height for the chart */
 }
 
 .noDataMessage {
   text-align: center;
   padding: 2rem;
-  color: var(--muted-foreground);
+  color: var(--secondary-color, #6b7280); /* Assuming --muted-foreground maps to secondary-color */
   font-size: 1.125rem;
-}
-.chartContainer {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background-color: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  transition: color 0.3s ease;
 }

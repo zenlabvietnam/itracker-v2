@@ -42,12 +42,16 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ session }) => {
       .eq('status', 'active'); // Only consider active income sources
 
     if (fetchError) {
+      console.error('Error fetching income sources:', fetchError.message);
       setError(fetchError.message);
       setLoading(false);
       return;
     }
 
+    console.log('Fetched income sources:', incomeSources);
+
     if (!incomeSources || incomeSources.length === 0) {
+      console.log('No active income sources found.');
       setChartData([]);
       setLoading(false);
       return;
@@ -60,7 +64,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ session }) => {
 
     const today = new Date();
     let startDate: Date;
-    let endDate: Date = today;
+    const endDate: Date = today;
 
     switch (selectedPeriod) {
       case 'thisMonth':
@@ -83,6 +87,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ session }) => {
       currentMonth.setMonth(currentMonth.getMonth() + 1);
     }
 
+    console.log('Initialized monthlyIncomeMap:', monthlyIncomeMap);
 
     typedIncomeSources.forEach(source => {
       let monthlyAmount = 0;
@@ -111,12 +116,16 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ session }) => {
       }
     });
 
+    console.log('monthlyIncomeMap after distribution:', monthlyIncomeMap);
+
     const formattedChartData: ChartData[] = Array.from(monthlyIncomeMap.entries())
       .sort(([monthA], [monthB]) => monthA.localeCompare(monthB)) // Sort by month
       .map(([month, totalIncome]) => ({
         month: month, // e.g., "2023-01"
         totalIncome: parseFloat(totalIncome.toFixed(2)),
       }));
+
+    console.log('Formatted chart data:', formattedChartData);
 
     setChartData(formattedChartData);
     setLoading(false);
@@ -169,20 +178,10 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ session }) => {
         </div>
         <div className={styles.chartContainer}>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart
-                data={chartData}
-                margin={{
-                  top: 5, right: 30, left: 20, bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="totalIncome" stroke="#8884d8" activeDot={{ r: 8 }} />
-              </LineChart>
+            <ResponsiveContainer width="100%" height="100%">
+              <svg width="100%" height="100%">
+                <rect x="10" y="10" width="100" height="100" fill="red" />
+              </svg>
             </ResponsiveContainer>
           ) : (
             <p className={styles.noDataMessage}>No income data available for the selected period.</p>

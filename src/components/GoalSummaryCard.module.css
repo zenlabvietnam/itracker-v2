@@ -1,53 +1,59 @@
 .card {
-  background-color: var(--background-card); /* Assuming a CSS variable for card background */
+  background-color: var(--background-color, #ffffff); /* Assuming a CSS variable for card background */
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
-  color: var(--text-color); /* Assuming a CSS variable for text color */
+  color: var(--text-color, #1a202c); /* Assuming a CSS variable for text color */
   width: 100%; /* Make it take full width of its parent */
   text-align: center; /* Center text content */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .card.error {
-  border: 1px solid var(--color-error); /* Assuming a CSS variable for error color */
-  color: var(--color-error);
+  border: 1px solid var(--primary-color, #e53e3e); /* Assuming a CSS variable for error color */
+  color: var(--primary-color, #e53e3e);
+  transition: border-color 0.3s ease, color 0.3s ease;
 }
 
 .title {
   font-size: 1.2em;
   font-weight: bold;
   margin-bottom: 15px;
-  color: var(--text-color-heading); /* Assuming a CSS variable for heading text color */
+  color: var(--text-color, #1a202c); /* Assuming a CSS variable for heading text color */
+  transition: color 0.3s ease;
 }
 
 .progressBarContainer {
   width: 100%;
-  background-color: var(--progress-bar-background); /* Assuming a CSS variable */
+  background-color: var(--accent-color, #e2e8f0); /* Assuming a CSS variable */
   border-radius: 5px;
   height: 10px;
   margin: 10px 0;
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 .progressBarFill {
   height: 100%;
-  background-color: var(--progress-bar-fill); /* Assuming a CSS variable */
+  background-color: var(--primary-color, #3b82f6); /* Assuming a CSS variable */
   border-radius: 5px;
-  transition: width 0.5s ease-in-out;
+  transition: width 0.5s ease-in-out, background-color 0.3s ease;
 }
 
 .progressText {
   font-size: 0.9em;
-  color: var(--text-color-secondary); /* Assuming a CSS variable */
+  color: var(--secondary-color, #4a5568); /* Assuming a CSS variable */
+  transition: color 0.3s ease;
 }
 
 .link {
   display: inline-block;
   margin-top: 15px;
-  color: var(--link-color); /* Assuming a CSS variable */
+  color: var(--primary-color, #3b82f6); /* Assuming a CSS variable */
   text-decoration: none;
   font-weight: bold;
+  transition: color 0.3s ease;
 }
 
 .link:hover {

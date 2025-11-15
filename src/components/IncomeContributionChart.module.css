@@ -1,32 +1,36 @@
 .chartContainer {
-  background-color: var(--background-card); /* Assuming a CSS variable for card background */
+  background-color: var(--background-color, #ffffff); /* Assuming a CSS variable for card background */
   border-radius: 8px;
   padding: 20px;
-  box-shadow: var(--shadow-md); /* Assuming a CSS variable for shadow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Assuming a CSS variable for shadow */
   margin-bottom: 20px;
   text-align: center;
+  transition: background-color 0.3s ease;
 }
 
 .chartTitle {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 20px;
-  color: var(--text-primary); /* Assuming a CSS variable for primary text color */
+  color: var(--text-color, #1a202c); /* Assuming a CSS variable for primary text color */
+  transition: color 0.3s ease;
 }
 
 .noDataMessage {
-  color: var(--text-secondary); /* Assuming a CSS variable for secondary text color */
+  color: var(--secondary-color, #4a5568); /* Assuming a CSS variable for secondary text color */
   font-style: italic;
   padding: 20px;
+  transition: color 0.3s ease;
 }
 
 .customTooltip {
-  background-color: var(--background-tooltip); /* Assuming a CSS variable for tooltip background */
-  border: 1px solid var(--border-color); /* Assuming a CSS variable for border color */
+  background-color: var(--background-color, #ffffff); /* Assuming a CSS variable for tooltip background */
+  border: 1px solid var(--accent-color, #e2e8f0); /* Assuming a CSS variable for border color */
   padding: 10px;
   border-radius: 4px;
-  color: var(--text-primary);
+  color: var(--text-color, #1a202c);
   font-size: 0.9rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .tooltipLabel {
@@ -54,7 +58,8 @@
   display: flex;
   align-items: center;
   font-size: 0.9rem;
-  color: var(--text-primary);
+  color: var(--text-color, #1a202c);
+  transition: color 0.3s ease;
 }
 
 .legendColor {
