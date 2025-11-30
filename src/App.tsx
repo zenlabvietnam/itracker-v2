@@ -36,7 +36,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      <BrowserRouter basename="/itracker-v2/">
+      <BrowserRouter>
         <Routes>
           <Route path="/login" element={session ? <Navigate to="/" /> : <LoginPage />} />
           <Route

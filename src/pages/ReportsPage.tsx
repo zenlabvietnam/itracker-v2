@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '../components/AppHeader';
 import { supabase } from '../lib/supabaseClient';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  ResponsiveContainer
 } from 'recharts';
 import {
   Select,
